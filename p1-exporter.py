@@ -11,7 +11,7 @@ import serial
 
 p1_power_used = Gauge('p1_power_used_kwh', 'The total amount of power consumed from the net', ['tarif'])
 p1_power_produced = Gauge('p1_power_produced_kwh', 'The total amount of power delivered back to the net', ['tarif'])
-p1_tarif = Gauge('p1_tarif', 'The currently active tarif', ['tarif'])
+p1_tarif = Gauge('p1_tarif', 'The currently active tarif')
 p1_actual_power_usage = Gauge('p1_actual_power_usage_kw', 'The current rate of power being consumed')
 p1_actual_power_production = Gauge('p1_actual_power_production_kw', 'The current rate of power being produced')
 
@@ -40,7 +40,6 @@ def parse_packet(packet: List[bytes]):
     k_tarif_indicator         = '0-0:96.14.0' # unitless
     k_actual_power_usage      = '1-0:1.7.0'   # kw
     k_actual_power_production = '1-0:2.7.0'   # kw
-    possible_tarifs = [1, 2]
 
     strip_unit = lambda s: s.split('*')[0] if '*' in s else s
     expr = re.compile('^(.+?)\((.*?)\)(?:\((.*?)\))?$')
@@ -61,8 +60,7 @@ def parse_packet(packet: List[bytes]):
         elif key == k_power_produced_tarif2:
             p1_power_produced.labels(tarif='2').set(float(strip_unit(v0)))
         elif key == k_tarif_indicator:
-            for tarif in possible_tarifs:
-                p1_tarif.labels(tarif=str(tarif)).set(1 if int(v0) == tarif else 0)
+            p1_tarif.set(int(v0))
         elif key == k_actual_power_usage:
             p1_actual_power_usage.set(float(strip_unit(v0)))
         elif key == p1_actual_power_production:
