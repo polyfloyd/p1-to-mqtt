@@ -12,8 +12,8 @@ import serial
 p1_power_used = Gauge('p1_power_used_kwh', 'The total amount of power consumed from the net', ['tarif'])
 p1_power_produced = Gauge('p1_power_produced_kwh', 'The total amount of power delivered back to the net', ['tarif'])
 p1_tarif = Gauge('p1_tarif', 'The currently active tarif')
-p1_actual_power_usage = Gauge('p1_actual_power_usage_kw', 'The current rate of power being consumed')
-p1_actual_power_production = Gauge('p1_actual_power_production_kw', 'The current rate of power being produced')
+p1_actual_power_usage = Gauge('p1_actual_power_usage_w', 'The current rate of power being consumed')
+p1_actual_power_production = Gauge('p1_actual_power_production_w', 'The current rate of power being produced')
 
 
 def main():
@@ -42,6 +42,8 @@ def parse_packet(packet: List[bytes]):
     k_actual_power_production = '1-0:2.7.0'   # kw
 
     strip_unit = lambda s: s.split('*')[0] if '*' in s else s
+    kilowatt = lambda s: float(strip_unit(s))
+    watt = lambda s: kilowatt(s) * 1000
     expr = re.compile('^(.+?)\((.*?)\)(?:\((.*?)\))?$')
 
     for line in packet:
@@ -52,19 +54,19 @@ def parse_packet(packet: List[bytes]):
         [(key, v0, v1)] = m
 
         if key == k_power_used_tarif1:
-            p1_power_used.labels(tarif='1').set(float(strip_unit(v0)))
+            p1_power_used.labels(tarif='1').set(kilowatt(v0))
         elif key == k_power_used_tarif2:
-            p1_power_used.labels(tarif='2').set(float(strip_unit(v0)))
+            p1_power_used.labels(tarif='2').set(kilowatt(v0))
         elif key == k_power_produced_tarif1:
-            p1_power_produced.labels(tarif='1').set(float(strip_unit(v0)))
+            p1_power_produced.labels(tarif='1').set(kilowatt(v0))
         elif key == k_power_produced_tarif2:
-            p1_power_produced.labels(tarif='2').set(float(strip_unit(v0)))
+            p1_power_produced.labels(tarif='2').set(kilowatt(v0))
         elif key == k_tarif_indicator:
             p1_tarif.set(int(v0))
         elif key == k_actual_power_usage:
-            p1_actual_power_usage.set(float(strip_unit(v0)))
+            p1_actual_power_usage.set(watt(v0))
         elif key == p1_actual_power_production:
-            p1_actual_power_production.set(float(strip_unit(v0)))
+            p1_actual_power_production.set(watt(v0))
 
 
 def read_packet(ser: serial.Serial) -> List[bytes]:
