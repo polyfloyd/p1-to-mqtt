@@ -14,6 +14,7 @@ p1_power_produced = Gauge('p1_power_produced_kwh', 'The total amount of power de
 p1_tarif = Gauge('p1_tarif', 'The currently active tarif')
 p1_actual_power_usage = Gauge('p1_actual_power_usage_w', 'The current rate of power being consumed')
 p1_actual_power_production = Gauge('p1_actual_power_production_w', 'The current rate of power being produced')
+p1_actual_voltage = Gauge('p1_actual_voltage', 'The current voltage per phase', ['phase'])
 
 
 def main():
@@ -40,10 +41,15 @@ def parse_packet(packet: List[bytes]):
     k_tarif_indicator         = '0-0:96.14.0' # unitless
     k_actual_power_usage      = '1-0:1.7.0'   # kw
     k_actual_power_production = '1-0:2.7.0'   # kw
+    k_voltage_l1              = '1-0:32.7.0'  # v
+    k_voltage_l2              = '1-0:52.7.0'  # v
+    k_voltage_l3              = '1-0:72.7.0'  # v
 
-    strip_unit = lambda s: s.split('*')[0] if '*' in s else s
-    kilowatt = lambda s: float(strip_unit(s))
+    unit = lambda s: float(s.split('*')[0] if '*' in s else s)
+    kilowatt = unit
+    volt = unit
     watt = lambda s: kilowatt(s) * 1000
+
     expr = re.compile('^(.+?)\((.*?)\)(?:\((.*?)\))?$')
 
     for line in packet:
@@ -67,6 +73,12 @@ def parse_packet(packet: List[bytes]):
             p1_actual_power_usage.set(watt(v0))
         elif key == p1_actual_power_production:
             p1_actual_power_production.set(watt(v0))
+        elif key == k_voltage_l1:
+            p1_actual_voltage.labels(phase='L1').set(volt(v0))
+        elif key == k_voltage_l2:
+            p1_actual_voltage.labels(phase='L2').set(volt(v0))
+        elif key == k_voltage_l3:
+            p1_actual_voltage.labels(phase='L3').set(volt(v0))
 
 
 def read_packet(ser: serial.Serial) -> List[bytes]:
