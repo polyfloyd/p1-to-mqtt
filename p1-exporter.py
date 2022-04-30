@@ -83,15 +83,11 @@ def parse_packet(packet: List[bytes]):
 
 def read_packet(ser: serial.Serial) -> List[bytes]:
     lines = []
-
     line = b''
-    while line != b'/KFM5KAIFA-METER\r\n':
-        line = ser.readline()
-
     while not line.startswith(b'!'):
         line = ser.readline().strip()
-        lines.append(line)
-
+        if line:
+            lines.append(line)
     return lines
 
 
