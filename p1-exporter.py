@@ -15,6 +15,7 @@ p1_tarif = Gauge('p1_tarif', 'The currently active tarif')
 p1_actual_power_usage = Gauge('p1_actual_power_usage_w', 'The current rate of power being consumed')
 p1_actual_power_production = Gauge('p1_actual_power_production_w', 'The current rate of power being produced')
 p1_actual_voltage = Gauge('p1_actual_voltage', 'The current voltage per phase', ['phase'])
+p1_gas_used = Gauge('p1_gas_used_m3', 'The total volume of natural gas consumed')
 
 
 def main():
@@ -44,10 +45,12 @@ def parse_packet(packet: List[bytes]):
     k_voltage_l1              = '1-0:32.7.0'  # v
     k_voltage_l2              = '1-0:52.7.0'  # v
     k_voltage_l3              = '1-0:72.7.0'  # v
+    k_gas_used                = '0-1:24.2.1'  # m3
 
     unit = lambda s: float(s.split('*')[0] if '*' in s else s)
     kilowatt = unit
     volt = unit
+    cubicmeters = unit
     watt = lambda s: kilowatt(s) * 1000
 
     expr = re.compile('^(.+?)\((.*?)\)(?:\((.*?)\))?$')
@@ -79,6 +82,8 @@ def parse_packet(packet: List[bytes]):
             p1_actual_voltage.labels(phase='L2').set(volt(v0))
         elif key == k_voltage_l3:
             p1_actual_voltage.labels(phase='L3').set(volt(v0))
+        elif key == k_gas_used:
+            p1_gas_used.set(cubicmeters(v1))
 
 
 def read_packet(ser: serial.Serial) -> List[bytes]:
