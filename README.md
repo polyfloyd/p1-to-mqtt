@@ -1,8 +1,8 @@
-P1 Prometheus Exporter
-======================
+P1 To MQTT
+==========
 
-A Python program that listens on the P1 serial port of modern electricity meters and exposes the
-received statistics on a Prometheus endpoint.
+A Python program that listens on the P1 serial port of modern electricity meters and relays the
+received statistics to an MQTT server.
 
 It is intended to be used with USB serial converter cables such as
 [this one](https://nl.aliexpress.com/item/33025118684.html).
@@ -10,7 +10,7 @@ It is intended to be used with USB serial converter cables such as
 
 ## Usage
 ```
-$ p1-exporter.py /dev/ttyUSB0
+$ p1-to-mqtt.py /dev/ttyUSB0
 ```
 
 Tip: Use a udev rule to ensure that your the serial device will have a consistent name so it will
