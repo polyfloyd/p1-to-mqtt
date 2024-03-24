@@ -21,7 +21,7 @@ k_voltage_l3              = '1-0:72.7.0'  # v
 k_gas_used                = '0-1:24.2.1'  # m3
 
 unit = lambda s: float(s.split('*')[0] if '*' in s else s)
-kilowatthours = lambda v: f'{unit(v)} Kwh'
+kilowatthours = lambda v: f'{unit(v)} kWh'
 volt = lambda v: f'{unit(v)} V'
 watt = lambda s: f'{unit(s) * 1000} W'
 cubicmeters = lambda v: f'{unit(v)} m³'
