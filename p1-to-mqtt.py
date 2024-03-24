@@ -30,6 +30,9 @@ packet_expr = re.compile('^(.+?)\((.*?)\)(?:\((.*?)\))?$')
 
 
 def parse_packet(mqtt_client: mqtt.Client, packet: List[bytes]):
+    power_used_total = 0
+    power_produced_total = 0
+
     for line in packet:
         line = line.decode('ascii')
         m = packet_expr.findall(line)
@@ -39,12 +42,16 @@ def parse_packet(mqtt_client: mqtt.Client, packet: List[bytes]):
 
         if key == k_power_used_tarif1:
             mqtt_client.publish('p1/power_used/T1', kilowatthours(v0))
+            power_used_total += unit(v0)
         elif key == k_power_used_tarif2:
             mqtt_client.publish('p1/power_used/T2', kilowatthours(v0))
+            power_used_total += unit(v0)
         elif key == k_power_produced_tarif1:
             mqtt_client.publish('p1/power_produced/T1', kilowatthours(v0))
+            power_produced_total += unit(v0)
         elif key == k_power_produced_tarif2:
             mqtt_client.publish('p1/power_produced/T2', kilowatthours(v0))
+            power_produced_total += unit(v0)
         elif key == k_tarif_indicator:
             mqtt_client.publish('p1/tarif', f'T{int(v0)}')
         elif key == k_actual_power_usage:
@@ -59,6 +66,9 @@ def parse_packet(mqtt_client: mqtt.Client, packet: List[bytes]):
             mqtt_client.publish('p1/voltage/L3', volt(v0))
         elif key == k_gas_used:
             mqtt_client.publish('p1/gas_used', cubicmeters(v1))
+
+    mqtt_client.publish('p1/power_used', f'{power_used_total} kWh')
+    mqtt_client.publish('p1/power_produced', f'{power_produced_total} kWh')
 
 
 def read_packet(ser: serial.Serial) -> List[bytes]:
